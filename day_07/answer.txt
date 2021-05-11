@@ -1,0 +1,7 @@
+--- Tests ---
+T1.0: True 2 2
+T2.1: True 3 3
+--- Day 07 p.1 ---
+True 115 115
+--- Day 07 p.2 ---
+True 231 231
