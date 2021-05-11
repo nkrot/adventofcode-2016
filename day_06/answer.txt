@@ -1,0 +1,7 @@
+--- Tests ---
+T1.0: True easter easter
+T2.0: True advent advent
+--- Day 06 p.1 ---
+True afwlyyyq afwlyyyq
+--- Day 06 p.2 ---
+True bhkzekao bhkzekao
