@@ -1,0 +1,15 @@
+--- Tests ---
+T1.0: True ['ADVENT'] ['ADVENT']
+T1.1: True ['ABBBBBC'] ['ABBBBBC']
+T1.2: True ['XYZXYZXYZ'] ['XYZXYZXYZ']
+T1.3: True ['ABCBCDEFEFG'] ['ABCBCDEFEFG']
+T1.4: True ['(1x3)A'] ['(1x3)A']
+T1.5: True ['X(3x3)ABC(3x3)ABCY'] ['X(3x3)ABC(3x3)ABCY']
+T2.6: True 9 9
+T2.7: True 20 20
+T2.8: True 241920 241920
+T2.9: True 445 445
+--- Day 09 p.1 ---
+True 123908 123908
+--- Day 09 p.2 ---
+True 10755693147 10755693147
