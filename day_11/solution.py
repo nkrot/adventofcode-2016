@@ -180,6 +180,16 @@ class Scene(object):
             raise ValueError("Wrong number of arguments")
         return obj
 
+    def counts(self) -> List[int]:
+        '''Return number of objects on each floor'''
+        counts = [len(objects) for objects in self.floors]
+        return counts
+
+
+# Number of scenes explored:
+# 0 | 2009 | 2_922_003 | sucks
+# A | 1574 | 2_632_642 | sucks
+
 
 def mutate(scene: Scene,
            memo={'go_up': set(), 'go_down': set()}
@@ -219,6 +229,10 @@ def mutate(scene: Scene,
             pass
         # if len(objs) > 1 and scene.compatible(*objs):
         #     break
+
+    # A) Don't move objects down if all floors below are already empty.
+    if sum(scene.counts()[:scene.elevator_at]) == 0:
+        return
 
     # moving objects down
     for objs in subsets:
