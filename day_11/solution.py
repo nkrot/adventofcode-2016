@@ -4,10 +4,14 @@
 # TODO
 # 1. Rank intermediate scenes by their "goodness" so that better ones are
 #    explored earlier that others. A* algorithm?
-# 2. Heuristics: when there are compatible xM and xG on a floor, always
-#    move them up together? Never consider moving them separately.
-# 3. Count states that have been explored and then compare how the counts
+# 2. Count states that have been explored and then compare how the counts
 #    vary between optimization attempts.
+#
+# Heuristics to check
+# 1) when there are compatible xM and xG on a floor, always move them up
+#    together? Never consider moving them separately.
+# 2) there is no need to bring *two* devices downstairs.
+
 
 import re
 import os
@@ -150,11 +154,33 @@ class Scene(object):
     def __eq__(self, other: 'Scene'):
         return hash(self) == hash(other)
 
-    def are_compatible(self, obj1, obj2) -> bool:
-        '''Return True if two given devices are a compatible pair of
-        a generator and a microchip'''
-        return obj1[:-1] == obj2[:-1]
+    def compatible(self, *objects):
+        '''
+        If called with one argument, return corresponding compatible device,
+        that is, a generator for given microchip and a microchip for given
+        generator.
+        If called with two arguments, return both arguments as a tuple if
+        given devices are compatible. Otherwise, return an empty tuple.
 
+        Examples:
+        compatible('LiG') --> 'LiM'
+        compatible('LiG', 'LiM')) --> ('LiG', 'LiM')
+        compatible('LiG', 'TmM')) --> ()
+        '''
+        if len(objects) == 1:
+            obj = objects[0]
+            obj = obj[:-1] + ('G' if obj[-1] == 'M' else 'M')
+        elif len(objects) == 2:
+            obj = ()
+            if objects[1] == self.compatible(objects[0]):
+                obj = objects
+        else:
+            raise ValueError("Wrong number of arguments")
+        return obj
+
+
+# scene = Scene()
+# exit(100)
 
 def mutate(scene: Scene,
            memo={'go_up': set(), 'go_down': set()}
@@ -175,7 +201,7 @@ def mutate(scene: Scene,
 
     def reorder(devices):
         key = len(devices)
-        if key == 2 and not scene.are_compatible(*devices):
+        if key == 2 and not scene.compatible(*devices):
             key += 1
         return key
 
@@ -192,19 +218,19 @@ def mutate(scene: Scene,
                 yield newscene
         except ElevatorError:
             pass
-        # if len(objs) > 1 and scene.are_compatible(*objs):
+        # if len(objs) > 1 and scene.compatible(*objs):
         #     break
 
     # moving objects down
-    # 1) there is no need to bring *two* devices downstairs
-    for obj in objects:
+    for objs in subsets:
         try:
-            newscene = Scene(scene).go_down(obj)
+            newscene = Scene(scene).go_down(*objs)
             if newscene not in memo['go_down']:
                 memo['go_down'].add(newscene)
                 yield newscene
         except ElevatorError:
             pass
+
 
 
 FINISHED = 0
@@ -234,8 +260,7 @@ def evaluate(scene: Scene) -> int:
         if not generators:
             continue
         for chip in filter(lambda o: o.endswith('M'), objects):
-            generator = chip[:-1] + 'G'
-            if generator not in generators:
+            if scene.compatible(chip) not in generators:
                 return CHIP_FRIED
 
     return CHIP_SAFE
