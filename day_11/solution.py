@@ -4,8 +4,6 @@
 # TODO
 # 1. Rank intermediate scenes by their "goodness" so that better ones are
 #    explored earlier that others. A* algorithm?
-# 2. Count states that have been explored and then compare how the counts
-#    vary between optimization attempts.
 #
 # Heuristics to check
 # 1) when there are compatible xM and xG on a floor, always move them up
@@ -49,6 +47,8 @@ class Scene(object):
         # 'elevator'   : 'E'
     }
 
+    count = 0
+
     @classmethod
     def from_lines(cls, lines: List[str]) -> 'Scene':
         obj = cls()
@@ -75,6 +75,8 @@ class Scene(object):
                             if k not in {'origin'}}
             self.__dict__ = deepcopy(subdict)
             self.origin = other
+
+        self.__class__.count += 1
 
     @property
     def devices(self) -> List[str]:
@@ -179,9 +181,6 @@ class Scene(object):
         return obj
 
 
-# scene = Scene()
-# exit(100)
-
 def mutate(scene: Scene,
            memo={'go_up': set(), 'go_down': set()}
     ) -> Generator[Scene, None, None]:
@@ -285,6 +284,8 @@ def replay(scene: Scene):
 
 def solve_p1(lines: List[str]) -> int:
     """Solution to the 1st part of the challenge"""
+    Scene.count = 0
+
     scenes = [Scene.from_lines(lines)]
     best_time = 100000
     solutions = []
@@ -319,6 +320,8 @@ def solve_p1(lines: List[str]) -> int:
     # for idx, solution in enumerate(solutions):
     #     print(f"--- SOLUTION #{idx} [time={solution.time}] ---")
     #     replay(solution)
+
+    print("Number of scenes explored:", Scene.count)
 
     return best_time
 
