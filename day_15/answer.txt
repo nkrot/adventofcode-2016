@@ -1,0 +1,9 @@
+--- Tests ---
+Iterations: 1
+T1.0: True 5 5
+--- Day 15 p.1 ---
+Iterations: 17
+True 400589 400589
+--- Day 15 p.2 ---
+Iterations: 25
+True 3045959 3045959
