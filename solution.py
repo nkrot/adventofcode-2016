@@ -14,7 +14,7 @@ from typing import List
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from aoc import utils
 
-
+DAY = 'DD'  # TODO
 DEBUG = False
 
 
@@ -55,15 +55,14 @@ def run_tests():
 
 
 def run_real():
-    day = 'DD'  # TODO
     lines = utils.load_input()
 
-    print(f"--- Day {day} p.1 ---")
+    print(f"--- Day {DAY} p.1 ---")
     exp1 = -1
     res1 = solve_p1(lines)
     print(exp1 == res1, exp1, res1)
 
-    print(f"--- Day {day} p.2 ---")
+    print(f"--- Day {DAY} p.2 ---")
     exp2 = -1
     res2 = solve_p2(lines)
     print(exp2 == res2, exp2, res2)
