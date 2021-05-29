@@ -1,0 +1,7 @@
+--- Tests ---
+T1.0: True decab decab
+T2.0: False abcde deabc
+--- Day 21 p.1 ---
+True agcebfdh agcebfdh
+--- Day 21 p.2 ---
+True afhdbegc afhdbegc
