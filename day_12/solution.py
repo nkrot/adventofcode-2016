@@ -17,56 +17,68 @@ from aoc import utils
 DEBUG = False
 
 
-def parse_lines(lines: List[str]) -> List[tuple]:
-    commands = []
-    for line in lines:
-        tokens = line.strip().split()
-        if tokens:
-            tokens = [int(t) if re.match(r'-?\d+$', t) else t for t in tokens]
-            commands.append(tuple(tokens))
-    return commands
+class AssembunnyInterpreter(object):
+
+    @staticmethod
+    def parse_lines(lines: List[str]) -> List[tuple]:
+        commands = []
+        for line in lines:
+            tokens = line.strip().split()
+            if tokens:
+                tokens = [int(t) if re.match(r'-?\d+$', t) else t for t in tokens]
+                commands.append(tuple(tokens))
+        return commands
+
+    def __init__(self, commands: List[tuple]):
+        self.commands = commands
+        self.registers = {'a': 0,  'b': 0, 'c': 0, 'd': 0}
+        self.debug = False
+
+    def dereference(self, n: Union[str, int]) -> int:
+        if isinstance(n, str):
+            return self.registers[n]
+        return n
+
+    def run(self):
+        pos = 0
+        while pos < len(self.commands):
+            offset = 1
+            cmd = self.commands[pos]
+            if DEBUG:
+                print(pos, cmd)
+                print(self.registers)
+            if cmd[0] == 'cpy':
+                self.registers[cmd[2]] = self.dereference(cmd[1])
+            elif cmd[0] == 'inc':
+                self.registers[cmd[1]] += 1
+            elif cmd[0] == 'dec':
+                self.registers[cmd[1]] -= 1
+            elif cmd[0] == 'jnz':
+                if self.dereference(cmd[1]):
+                    offset = cmd[2]
+            else:
+                raise ValueError(f"Unrecognized command: {cmd}")
+            pos += offset
+            if self.debug:
+                print(self.registers)
+                print(pos)
 
 
 def solve_p1(lines: List[str], part=1) -> int:
     """Solution to the 1st part of the challenge"""
-    commands = parse_lines(lines)
+    commands = AssembunnyInterpreter.parse_lines(lines)
     if DEBUG:
         for i, cmd in enumerate(commands):
             print(i, cmd)
 
-    registers = {'a': 0,  'b': 0, 'c': 0, 'd': 0}
+    computer = AssembunnyInterpreter(commands)
 
     if part == 2:
-        registers['c'] = 1
+        computer.registers['c'] = 1
 
-    def dereference(n: Union[str, int]) -> int:
-        if isinstance(n, str):
-            return registers[n]
-        return n
+    computer.run()
 
-    pos = 0
-    while pos < len(commands):
-        offset = 1
-        cmd = commands[pos]
-        if DEBUG:
-            print(pos, cmd)
-            print(registers)
-        if cmd[0] == 'cpy':
-            registers[cmd[2]] = dereference(cmd[1])
-        elif cmd[0] == 'inc':
-            registers[cmd[1]] += 1
-        elif cmd[0] == 'dec':
-            registers[cmd[1]] -= 1
-        elif cmd[0] == 'jnz':
-            if dereference(cmd[1]):
-                offset = cmd[2]
-        else:
-            raise ValueError(f"Unrecognized command: {cmd}")
-        pos += offset
-        if DEBUG:
-            print(registers)
-            print(pos)
-    return registers['a']
+    return computer.registers['a']
 
 
 def solve_p2(lines: List[str]) -> int:
