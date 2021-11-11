@@ -52,16 +52,23 @@ class AssembunnyInterpreter(object):
 
     def jnz(self, cmd: tuple):
         if self.dereference(cmd[1]):
-            self.offset = cmd[2]
+            self.offset = self.dereference(cmd[2])
+
+    def inspect(self):
+        print("--- computer state --")
+        print("Registers", self.registers)
+        for idx, cmd in enumerate(self.commands):
+            print(f"[{idx}]: {cmd}")
 
     def run(self):
         self.pos = 0
         while self.pos < len(self.commands):
             self.offset = 1
             cmd = self.commands[self.pos]
-            if DEBUG:
+            if self.debug:
+                print("--- Before ---")
                 print(self.pos, cmd)
-                print(self.registers)
+                print("Registers", self.registers)
             meth = getattr(self, cmd[0])
             if meth:
                 meth(cmd)
@@ -69,8 +76,10 @@ class AssembunnyInterpreter(object):
                 raise ValueError(f"Unrecognized command: {cmd}")
             self.pos += self.offset
             if self.debug:
-                print(self.registers)
-                print(self.pos)
+                print("--- After ---")
+                print("Registers:", self.registers)
+                print("Cursor at", self.pos)
+        return self.registers
 
 
 def solve_p1(lines: List[str], part=1) -> int:
