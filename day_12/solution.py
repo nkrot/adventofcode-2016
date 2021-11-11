@@ -33,35 +33,44 @@ class AssembunnyInterpreter(object):
         self.commands = commands
         self.registers = {'a': 0,  'b': 0, 'c': 0, 'd': 0}
         self.debug = False
+        self.pos = 0
+        self.offset = 1  # jump
 
     def dereference(self, n: Union[str, int]) -> int:
         if isinstance(n, str):
             return self.registers[n]
         return n
 
+    def cpy(self, cmd: tuple):
+        self.registers[cmd[2]] = self.dereference(cmd[1])
+
+    def inc(self, cmd: tuple):
+        self.registers[cmd[1]] += 1
+
+    def dec(self, cmd: tuple):
+        self.registers[cmd[1]] -= 1
+
+    def jnz(self, cmd: tuple):
+        if self.dereference(cmd[1]):
+            self.offset = cmd[2]
+
     def run(self):
-        pos = 0
-        while pos < len(self.commands):
-            offset = 1
-            cmd = self.commands[pos]
+        self.pos = 0
+        while self.pos < len(self.commands):
+            self.offset = 1
+            cmd = self.commands[self.pos]
             if DEBUG:
-                print(pos, cmd)
+                print(self.pos, cmd)
                 print(self.registers)
-            if cmd[0] == 'cpy':
-                self.registers[cmd[2]] = self.dereference(cmd[1])
-            elif cmd[0] == 'inc':
-                self.registers[cmd[1]] += 1
-            elif cmd[0] == 'dec':
-                self.registers[cmd[1]] -= 1
-            elif cmd[0] == 'jnz':
-                if self.dereference(cmd[1]):
-                    offset = cmd[2]
+            meth = getattr(self, cmd[0])
+            if meth:
+                meth(cmd)
             else:
                 raise ValueError(f"Unrecognized command: {cmd}")
-            pos += offset
+            self.pos += self.offset
             if self.debug:
                 print(self.registers)
-                print(pos)
+                print(self.pos)
 
 
 def solve_p1(lines: List[str], part=1) -> int:
@@ -72,6 +81,7 @@ def solve_p1(lines: List[str], part=1) -> int:
             print(i, cmd)
 
     computer = AssembunnyInterpreter(commands)
+    computer.debug = DEBUG
 
     if part == 2:
         computer.registers['c'] = 1
