@@ -2,7 +2,11 @@
 
 # # #
 #
-#
+# The 2nd part runs quite a long time. To improve performance,  use pypy
+# > time -p pypy3 solution.py
+#    user 176,21
+# Alternatively, implement optimization (search below for ideas).
+
 
 import re
 import os
@@ -22,9 +26,9 @@ class AssembunnyInterpreter(BaseInterpreter):
     '''Introduces a new operation `tgl`'''
 
     def tgl(self, cmd: tuple):
-        print("Hello from tgl", cmd)
-        arg = self.dereference(cmd[1])
+        arg = self.value(cmd[1])
         pos = self.pos + arg
+        # print(cmd, "modifies line", pos)
         if pos < len(self.commands):
             other_cmd = self.commands[pos]
             if self.debug:
@@ -45,8 +49,46 @@ class AssembunnyInterpreter(BaseInterpreter):
                     self.commands[pos] = ('jnz',) + other_cmd[1:]
             if self.debug:
                 print("Rewritten", self.commands[pos])
-        self.inspect()
+        # self.inspect()
 
+    def add(self, cmd: tuple):
+        '''operation `add ARG1 TRG`'''
+        self.registers[cmd[2]] = self.value(cmd[1]) + self.value(cmd[2])
+
+    def mul(self, cmd: tuple):
+        '''operation `mul ARG1 TRG`'''
+        self.registers[cmd[2]] = self.value(cmd[1]) * self.value(cmd[2])
+
+    def optimize(self):
+        '''Replace some blocks with other operations.
+
+        This however should be done carefully, as `tgl` instruction may affect
+        rewritten code. Perhaps, rewritten section should remain active for as
+        long as the execution is within the section, and restored to
+        the original state otherwise.
+        '''
+        self._rewrite_loop_as_sum()
+        #self._rewrite_nested_loops_as_multiplication()
+
+    def _rewrite_loop_as_sum(self):
+        '''
+        [21]: ('inc', 'a')        --> add d a
+        [22]: ('dec', 'd')        --> cpy d 0
+        [23]: ('jnz', 'd', -2)    --> jnz 0 0
+        '''
+        raise NotImplementedError("Worth trying...")
+
+
+#https://www.reddit.com/r/adventofcode/comments/5jvbzt/2016_day_23_solutions/
+# optimize some constructions replacing inc/dec with multiplication
+
+# [19]: ('cpy', 94, 'c')
+# [20]: ('cpy', 80, 'd')
+#   [21]: ('inc', 'a')
+#   [22]: ('dec', 'd')
+#   [23]: ('jnz', 'd', -2)
+# [24]: ('dec', 'c')
+# [25]: ('jnz', 'c', -5)
 
 def solve_p1(lines: List[str], part: int = 0) -> int:
     """Solution to the 1st part of the challenge"""
@@ -81,9 +123,24 @@ dec a
 dec a
 """
 
+# my own additional operators, to be used in optimized code
+
+text_2 = """cpy 2 a
+cpy 3 b
+add b a
+add 10 a
+"""
+
+text_3 = """cpy 2 a
+cpy 3 b
+add b a
+mul 10 a
+"""
 
 tests = [
     (text_1.split('\n'), 3, None),
+    (text_2.split('\n'), 15, None),
+    (text_3.split('\n'), 50, None),
 ]
 
 
@@ -103,13 +160,13 @@ def run_tests():
 def run_real():
     lines = utils.load_input()
 
-    # print(f"--- Day {DAY} p.1 ---")
-    # exp1 = 12560
-    # res1 = solve_p1(lines, 1)
-    # print(exp1 == res1, exp1, res1)
+    print(f"--- Day {DAY} p.1 ---")
+    exp1 = 12560
+    res1 = solve_p1(lines, 1)
+    print(exp1 == res1, exp1, res1)
 
     print(f"--- Day {DAY} p.2 ---")
-    exp2 = -1
+    exp2 = 479009120 # takes forever w/o optimization
     res2 = solve_p2(lines)
     print(exp2 == res2, exp2, res2)
 
