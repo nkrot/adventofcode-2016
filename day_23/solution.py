@@ -5,7 +5,8 @@
 # The 2nd part runs quite a long time. To improve performance,  use pypy
 # > time -p pypy3 solution.py
 #    user 176,21
-# Alternatively, implement optimization (search below for ideas).
+# Alternatively, implement optimization (search below for ideas, also in
+# day 12)
 
 
 import re
@@ -51,34 +52,6 @@ class AssembunnyInterpreter(BaseInterpreter):
                 print("Rewritten", self.commands[pos])
         # self.inspect()
 
-    def add(self, cmd: tuple):
-        '''operation `add ARG1 TRG`'''
-        self.registers[cmd[2]] = self.value(cmd[1]) + self.value(cmd[2])
-
-    def mul(self, cmd: tuple):
-        '''operation `mul ARG1 TRG`'''
-        self.registers[cmd[2]] = self.value(cmd[1]) * self.value(cmd[2])
-
-    def optimize(self):
-        '''Replace some blocks with other operations.
-
-        This however should be done carefully, as `tgl` instruction may affect
-        rewritten code. Perhaps, rewritten section should remain active for as
-        long as the execution is within the section, and restored to
-        the original state otherwise.
-        '''
-        self._rewrite_loop_as_sum()
-        #self._rewrite_nested_loops_as_multiplication()
-
-    def _rewrite_loop_as_sum(self):
-        '''
-        [21]: ('inc', 'a')        --> add d a
-        [22]: ('dec', 'd')        --> cpy d 0
-        [23]: ('jnz', 'd', -2)    --> jnz 0 0
-        '''
-        raise NotImplementedError("Worth trying...")
-
-
 #https://www.reddit.com/r/adventofcode/comments/5jvbzt/2016_day_23_solutions/
 # optimize some constructions replacing inc/dec with multiplication
 
@@ -123,26 +96,9 @@ dec a
 dec a
 """
 
-# my own additional operators, to be used in optimized code
-
-text_2 = """cpy 2 a
-cpy 3 b
-add b a
-add 10 a
-"""
-
-text_3 = """cpy 2 a
-cpy 3 b
-add b a
-mul 10 a
-"""
-
 tests = [
     (text_1.split('\n'), 3, None),
-    (text_2.split('\n'), 15, None),
-    (text_3.split('\n'), 50, None),
 ]
-
 
 def run_tests():
     print("--- Tests ---")
