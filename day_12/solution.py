@@ -36,13 +36,13 @@ class AssembunnyInterpreter(object):
         self.pos = 0
         self.offset = 1  # jump
 
-    def dereference(self, n: Union[str, int]) -> int:
+    def value(self, n: Union[str, int]) -> int:
         if isinstance(n, str):
             return self.registers[n]
         return n
 
     def cpy(self, cmd: tuple):
-        self.registers[cmd[2]] = self.dereference(cmd[1])
+        self.registers[cmd[2]] = self.value(cmd[1])
 
     def inc(self, cmd: tuple):
         self.registers[cmd[1]] += 1
@@ -51,17 +51,19 @@ class AssembunnyInterpreter(object):
         self.registers[cmd[1]] -= 1
 
     def jnz(self, cmd: tuple):
-        if self.dereference(cmd[1]):
-            self.offset = self.dereference(cmd[2])
+        if self.value(cmd[1]):
+            self.offset = self.value(cmd[2])
 
     def inspect(self):
         print("--- computer state --")
         print("Registers", self.registers)
         for idx, cmd in enumerate(self.commands):
             print(f"[{idx}]: {cmd}")
+        print("--- END ---")
 
     def run(self):
         self.pos = 0
+        # self.inspect()
         while self.pos < len(self.commands):
             self.offset = 1
             cmd = self.commands[self.pos]
@@ -81,6 +83,58 @@ class AssembunnyInterpreter(object):
                 print("Cursor at", self.pos)
         return self.registers
 
+    def add(self, cmd: tuple):
+        '''operation `add ARG1 TRG`'''
+        self.registers[cmd[2]] = self.value(cmd[1]) + self.value(cmd[2])
+
+    def mul(self, cmd: tuple):
+        '''operation `mul ARG1 TRG`'''
+        self.registers[cmd[2]] = self.value(cmd[1]) * self.value(cmd[2])
+
+    def optimize(self):
+        '''Replace some blocks with other operations.'''
+        if self.debug:
+            print("--- optimizing ---")
+        self._rewrite_loop_as_sum()
+        #self._rewrite_nested_loops_as_multiplication()
+
+    def _rewrite_loop_as_sum(self):
+        '''
+        [21]: ('inc', 'a')        --> add d a     // k-th line
+        [22]: ('dec', 'd')        --> cpy d 0     // l-th line
+        [23]: ('jnz', 'd', -2)    --> jnz 0 0     // m-th line
+
+        Due to this optimization, runnning time decreases:
+        * user 23,97 --> 0,05
+        '''
+
+        for m, cmd_m in enumerate(self.commands):
+            if m > 1 and cmd_m[0] == 'jnz' and cmd_m[2] == -2:
+                # print(m, cmd_m)
+                k, l = m - 2, m - 1
+                cmd_k = self.commands[k]
+                cmd_l = self.commands[l]
+                if (cmd_k[0] == 'inc' and cmd_l[0] == 'dec'
+                    and cmd_l[1] == cmd_m[1]):
+                    _cmd_k = ('add', cmd_l[1], cmd_k[1])
+                    _cmd_l = ('cpy', 0, cmd_l[1])
+                    _cmd_m = ('jnz', 0, 0)
+                    self.commands[k] = _cmd_k
+                    self.commands[l] = _cmd_l
+                    self.commands[m] = _cmd_m
+
+
+#https://www.reddit.com/r/adventofcode/comments/5jvbzt/2016_day_23_solutions/
+# optimize some constructions replacing inc/dec with multiplication
+
+# [19]: ('cpy', 94, 'c')
+# [20]: ('cpy', 80, 'd')
+#   [21]: ('inc', 'a')
+#   [22]: ('dec', 'd')
+#   [23]: ('jnz', 'd', -2)
+# [24]: ('dec', 'c')
+# [25]: ('jnz', 'c', -5)
+
 
 def solve_p1(lines: List[str], part=1) -> int:
     """Solution to the 1st part of the challenge"""
@@ -95,6 +149,9 @@ def solve_p1(lines: List[str], part=1) -> int:
     if part == 2:
         computer.registers['c'] = 1
 
+    # computer.inspect()
+    computer.optimize()
+    # computer.inspect()
     computer.run()
 
     return computer.registers['a']
@@ -114,9 +171,23 @@ jnz a 2
 dec a\
 """
 
+# my own additional operators, to be used in optimized code
+text_2 = """cpy 2 a
+cpy 3 b
+add b a
+add 10 a
+"""
+
+text_3 = """cpy 2 a
+cpy 3 b
+add b a
+mul 10 a
+"""
 
 tests = [
     (text_1.split('\n'), 42, None),
+    (text_2.split('\n'), 15, None),
+    (text_3.split('\n'), 50, None),
 ]
 
 
